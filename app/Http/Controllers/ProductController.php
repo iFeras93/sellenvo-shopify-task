@@ -19,5 +19,4 @@ class ProductController extends Controller
         $products = json_decode($response->getBody(), true);
         return $products;
     }
-
 }
