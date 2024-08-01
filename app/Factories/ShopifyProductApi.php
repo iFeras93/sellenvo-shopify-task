@@ -3,6 +3,7 @@
 namespace App\Factories;
 
 use App\Contracts\ProductApiInterface;
+use App\Helpers\ShopifyUtils;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
