@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'shopify' => [
+        'api_key' => env('SHOPIFY_API_KEY'),
+        'api_password' => env('SHOOPIFY_API_PASSWORD'),
+        'store_name' => env('SHOPIFY_STORE_NAME'),
+        'admin_api_token' => env('SHOOPIFY_ADMIN_API_TOKEN'),
+    ],
+
 ];
