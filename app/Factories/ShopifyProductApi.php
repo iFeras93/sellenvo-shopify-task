@@ -8,6 +8,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ShopifyProductApi implements ProductApiInterface
 {
@@ -43,8 +44,136 @@ class ShopifyProductApi implements ProductApiInterface
         }
     }
 
-    public function storeProduct(Request $request)
+    public function storeProduct__(Request $request)
     {
-        //
+        $productData = [
+            'product' => [
+                'title' => $request->input('title') ?? '',
+                'body_html' => $request->input('body_html') ?? '',
+                'vendor' => $request->input('vendor') ?? '',
+                'product_type' => $request->input('product_type') ?? '',
+                'tags' => $request->input('tags') ?? [],
+                'images' => ShopifyUtils::handleImagesSrc($request->input('image_src')),
+                'variants' => [
+                    [
+                        'option1' => $request->input('option1') ?? '', // Example option
+                        'option2' => $request->input('option2') ?? '', // Example option
+                        'option3' => $request->input('option3') ?? '', // Example option
+                        'price' => $request->input('price') ?? '10.00',
+                        'sku' => $request->input('sku') ?? '',
+                        'inventory_quantity' => $request->input('inventory_quantity') ?? 0,
+                        'inventory_management' => $request->input('inventory_management') ?? 'shopify',
+                    ]
+                ]
+            ]
+        ];
+
+        try {
+            $response = $this->client->post("https://{$this->apiKey}:{$this->apiPassword}@{$this->storeName}.myshopify.com/admin/products.json", [
+                'json' => $productData
+            ]);
+
+            return json_decode($response->getBody(), true);
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                $response = $e->getResponse();
+                $body = $response->getBody();
+                $error = json_decode($body, true);
+                return ['error' => $error['errors']];
+            } else {
+                return ['error' => $e->getMessage()];
+            }
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function storeProduct(array|Request $product)
+    {
+        try {
+//            Log::info("Pushed Product Object");
+//            Log::info($product);
+//            Log::info("////////////////////");
+            $response = $this->client->post("https://{$this->apiKey}:{$this->apiPassword}@{$this->storeName}.myshopify.com/admin/products.json", [
+                'json' => $product
+            ]);
+
+            $productFromShopify = json_decode($response->getBody()->getContents(), true);
+//            Log::info($productFromShopify['product']);
+            $variants = collect($productFromShopify['product']['variants']) ?? [];
+            //updates quantity for product
+//            Log::info($location['id']);
+            $location = $this->fetchInventoryLocations();
+//            Log::info("Variants:");
+//            Log::info($variants);
+//            Log::info("Location:");
+//            Log::info($location['id']);
+//            foreach ($variants as $variant) {
+//                $this->updateInventoryQuantity($variant['id'], $location['id']);
+//            }
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                $response = $e->getResponse();
+                $body = $response->getBody();
+                $error = json_decode($body, true);
+                return ['error' => $error['errors']];
+            } else {
+                return ['error' => $e->getMessage()];
+            }
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function fetchInventoryLocations()
+    {
+        try {
+            $response = $this->client->get("https://{$this->apiKey}:{$this->apiPassword}@{$this->storeName}.myshopify.com/admin/locations.json");
+            $location = json_decode($response->getBody(), true)['locations'][0];
+            return $location ?? null;
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                $response = $e->getResponse();
+                $body = $response->getBody();
+                $error = json_decode($body, true);
+                return ['error' => $error['errors']];
+            } else {
+                return ['error' => $e->getMessage()];
+            }
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function updateInventoryQuantity($inventoryItemId, $locationID, $quantity = 50)
+    {
+
+        try {
+            $inventoryLevelUrl = "https://{$this->apiKey}:{$this->apiPassword}@{$this->storeName}/admin/api/2023-04/inventory_levels/set.json";
+            $response = $this->client->post($inventoryLevelUrl, [
+                'json' => [
+                    'inventory_level' => [
+                        'inventory_item_id' => $inventoryItemId,
+                        'location_id' => $locationID, // Replace with your location ID
+                        'available' => $quantity
+                    ]
+                ]
+            ]);
+
+
+            Log::info("Update Inventory Level: {$locationID} - {$quantity}");
+            Log::info(json_decode($response->getBody()->getContents(), true));
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                $response = $e->getResponse();
+                $body = $response->getBody();
+                $error = json_decode($body, true);
+                return ['error' => $error['errors']];
+            } else {
+                return ['error' => $e->getMessage()];
+            }
+        } catch (GuzzleException $e) {
+            return ['error' => $e->getMessage()];
+        }
     }
 }
