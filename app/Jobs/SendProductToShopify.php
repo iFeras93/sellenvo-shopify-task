@@ -62,54 +62,6 @@ class SendProductToShopify implements ShouldQueue
         $apiPassword = config('services.shopify.admin_api_token');
         $storeName = config('services.shopify.store_name');
 
-//        $productData = [
-//            'product' => [
-//                'handle' => $product['handle'] ?? null,
-//                'title' => $product['title'] ?? '',
-//                'body_html' => $product['body_html'] ?? '',
-//                'vendor' => $product['vendor'] ?? '',
-//                'product_type' => $product['type'] ?? '',
-//                'tags' => explode(', ', $product['tags']) ?? [],
-//                'published' => filter_var($product['published'], FILTER_VALIDATE_BOOLEAN) ?? true,
-//
-////                'options' => [
-////                    [
-////                        'name' => $row['option1_name'],
-////                        'values' => [$row['option1_value']]
-////                    ],
-////                    [
-////                        'name' => $row['option2_name'],
-////                        'values' => [$row['option2_value']]
-////                    ],
-////                    [
-////                        'name' => $row['option3_name'],
-////                        'values' => [$row['option3_value']]
-////                    ]
-////                ],
-////                'variants' => [
-////                    [
-////                        'sku' => $row['variant_sku'],
-////                        'weight' => (float)$row['variant_grams'],
-////                        'inventory_management' => $row['variant_inventory_tracker'],
-////                        'inventory_quantity' => 50,//$row['variant_inventory_qty'] ? (int)$row['variant_inventory_qty'] : null,
-////                        'inventory_policy' => $row['variant_inventory_policy'],
-////                        'fulfillment_service' => $row['variant_fulfillment_service'],
-////                        'price' => (float)$row['variant_price'],
-////                        'compare_at_price' => $row['variant_compare_at_price'] ? (float)$row['variant_compare_at_price'] : null,
-////                        'requires_shipping' => filter_var($row['variant_requires_shipping'], FILTER_VALIDATE_BOOLEAN),
-////                        'taxable' => filter_var($row['variant_taxable'], FILTER_VALIDATE_BOOLEAN),
-////                        'barcode' => $row['variant_barcode'],
-////                        'weight_unit' => $row['variant_weight_unit'],
-////                        'tax_code' => $row['variant_tax_code']
-////                    ]
-////                ],
-////                'images' => ShopifyUtils::handleImagesSrc($row),
-//                'gift_card' => filter_var($product['gift_card'], FILTER_VALIDATE_BOOLEAN) ?? false,
-//                'status' => $product['status'] ?? 'active',
-//                'cost_per_item' => $product['cost_per_item'] ? (float)$product['cost_per_item'] : 0,
-//            ]
-//        ];
-
         $productData = [
             'product' => $product,
         ];
@@ -118,8 +70,6 @@ class SendProductToShopify implements ShouldQueue
         $productData['product']['images'] = array_filter($productData['product']['images'], function ($option) {
             return !is_null($option['src']);
         });
-
-//        Log::info(json_encode($product));
 
         $productAfterRequest = (new ShopifyProductApi())->storeProduct($productData);
         Log::info($productAfterRequest);

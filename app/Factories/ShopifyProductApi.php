@@ -44,66 +44,21 @@ class ShopifyProductApi implements ProductApiInterface
         }
     }
 
-    public function storeProduct__(Request $request)
-    {
-        $productData = [
-            'product' => [
-                'title' => $request->input('title') ?? '',
-                'body_html' => $request->input('body_html') ?? '',
-                'vendor' => $request->input('vendor') ?? '',
-                'product_type' => $request->input('product_type') ?? '',
-                'tags' => $request->input('tags') ?? [],
-                'images' => ShopifyUtils::handleImagesSrc($request->input('image_src')),
-                'variants' => [
-                    [
-                        'option1' => $request->input('option1') ?? '', // Example option
-                        'option2' => $request->input('option2') ?? '', // Example option
-                        'option3' => $request->input('option3') ?? '', // Example option
-                        'price' => $request->input('price') ?? '10.00',
-                        'sku' => $request->input('sku') ?? '',
-                        'inventory_quantity' => $request->input('inventory_quantity') ?? 0,
-                        'inventory_management' => $request->input('inventory_management') ?? 'shopify',
-                    ]
-                ]
-            ]
-        ];
-
-        try {
-            $response = $this->client->post("https://{$this->apiKey}:{$this->apiPassword}@{$this->storeName}.myshopify.com/admin/products.json", [
-                'json' => $productData
-            ]);
-
-            return json_decode($response->getBody(), true);
-        } catch (RequestException $e) {
-            if ($e->hasResponse()) {
-                $response = $e->getResponse();
-                $body = $response->getBody();
-                $error = json_decode($body, true);
-                return ['error' => $error['errors']];
-            } else {
-                return ['error' => $e->getMessage()];
-            }
-        } catch (GuzzleException $e) {
-            return ['error' => $e->getMessage()];
-        }
-    }
-
     public function storeProduct(array|Request $product)
     {
         try {
 //            Log::info("Pushed Product Object");
 //            Log::info($product);
-//            Log::info("////////////////////");
             $response = $this->client->post("https://{$this->apiKey}:{$this->apiPassword}@{$this->storeName}.myshopify.com/admin/products.json", [
                 'json' => $product
             ]);
 
             $productFromShopify = json_decode($response->getBody()->getContents(), true);
 //            Log::info($productFromShopify['product']);
-            $variants = collect($productFromShopify['product']['variants']) ?? [];
+//            $variants = collect($productFromShopify['product']['variants']) ?? [];
             //updates quantity for product
 //            Log::info($location['id']);
-            $location = $this->fetchInventoryLocations();
+//            $location = $this->fetchInventoryLocations();
 //            Log::info("Variants:");
 //            Log::info($variants);
 //            Log::info("Location:");
@@ -124,6 +79,10 @@ class ShopifyProductApi implements ProductApiInterface
             return ['error' => $e->getMessage()];
         }
     }
+
+    /****
+     * These functions work good but i have another way to update inventory quantity.
+     */
 
     public function fetchInventoryLocations()
     {
